@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Fertility Assessment – Comprehensive PHN Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        .transition-all { transition: all 0.3s ease; }
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .group:hover .group-hover\:rotate-y-180 { transform: rotateY(180deg); }
+
+        .recall-mode .reveal-text {
+            background-color: #cbd5e1;
+            color: transparent;
+            border-radius: 0.375rem;
+            padding: 0 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            box-shadow: inset 0 0 0 1px #94a3b8;
+        }
+        .recall-mode .reveal-text:hover,
+        .recall-mode .reveal-text.revealed {
+            background-color: #fde047;
+            color: #1e293b;
+            box-shadow: none;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 8px; }
+        .content-section { animation: fade 0.3s ease; }
+        @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .locked-section { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+        .quiz-feedback-correct { background-color: #dcfce7; border-left: 4px solid #22c55e; }
+        .quiz-feedback-wrong { background-color: #fee2e2; border-left: 4px solid #ef4444; }
+        .flip-card {
+            background-color: transparent;
+            height: 200px;
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border-radius: 1rem;
+        }
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        .flip-card-front {
+            background-color: #1e293b;
+            color: white;
+        }
+        .flip-card-back {
+            background-color: #0ea5e9;
+            color: white;
+            transform: rotateY(180deg);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { fert: { light: '#f1f5f9', DEFAULT: '#0891b2', dark: '#164e63' } } } }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 h-screen flex flex-col md:flex-row font-sans text-slate-800 overflow-hidden">
+
+    <!-- Mobile Header -->
+    <div class="md:hidden bg-fert-dark text-white p-4 flex justify-between items-center shadow-md z-30 shrink-0">
+        <button onclick="toggleMobileMenu()" class="text-white focus:outline-none z-40">
+            <i class="fa-solid fa-bars text-2xl"></i>
+        </button>
+        <h1 class="font-bold text-lg absolute left-1/2 transform -translate-x-1/2 pointer-events-none">
+            <i class="fa-solid fa-children mr-2 text-fert-light"></i> Fertility Assessment
+        </h1>
+        <div class="w-8"></div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <nav id="sidebar" class="hidden md:flex flex-col w-full md:w-80 bg-white shadow-2xl h-full absolute md:relative z-30 transition-transform duration-300 shrink-0 border-r border-slate-200">
+        <div class="p-6 bg-gradient-to-br from-fert-dark to-fert text-white hidden md:block shrink-0">
+            <h1 class="font-black text-2xl tracking-wide"><i class="fa-solid fa-children text-fert-light mr-2"></i> Fertility Assessment</h1>
+            <p class="text-sm text-slate-300 mt-1 font-medium">Subfertility · Diagnostics · Nursing Role</p>
+        </div>
+        <div class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1 text-sm font-medium">
+                <li><button onclick="showSection('home')" id="btn-home" class="nav-btn w-full text-left px-6 py-3 bg-fert-light text-fert-dark border-r-4 border-fert-dark transition-colors"><i class="fa-solid fa-house w-6 nav-icon"></i><i class="fa-solid fa-lock w-6 hidden text-slate-400"></i> Home / Start</button></li>
+                <li><button onclick="showSection('overview')" id="btn-overview" class="nav-btn w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors locked-section"><i class="fa-solid fa-biohazard w-6 nav-icon hidden"></i><i class="fa-solid fa-lock w-6 text-slate-400"></i> Definitions & Epidemiology</button></li>
+                <li><button onclick="showSection('female')" id="btn-female" class="nav-btn w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors locked-section"><i class="fa-solid fa-venus w-6 nav-icon hidden"></i><i class="fa-solid fa-lock w-6 text-slate-400"></i> Female Factor Assessment</button></li>
+                <li><button onclick="showSection('male')" id="btn-male" class="nav-btn w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors locked-section"><i class="fa-solid fa-mars w-6 nav-icon hidden"></i><i class="fa-solid fa-lock w-6 text-slate-400"></i> Male Factor Assessment</button></li>
+                <li><button onclick="showSection('diagnostics')" id="btn-diagnostics" class="nav-btn w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors locked-section"><i class="fa-solid fa-microscope w-6 nav-icon hidden"></i><i class="fa-solid fa-lock w-6 text-slate-400"></i> Diagnostic Workup</button></li>
+                <li><button onclick="showSection('treatment')" id="btn-treatment" class="nav-btn w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors locked-section"><i class="fa-solid fa-capsules w-6 nav-icon hidden"></i><i class="fa-solid fa-lock w-6 text-slate-400"></i> Management & ART</button></li>
+                <li><button onclick="showSection('nursing')" id="btn-nursing" class="nav-btn w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors locked-section"><i class="fa-solid fa-user-nurse w-6 nav-icon hidden"></i><i class="fa-solid fa-lock w-6 text-slate-400"></i> PHN Role & Nursing Care</button></li>
+                <li><button onclick="showSection('mnemonics')" id="btn-mnemonics" class="nav-btn w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors border-t border-slate-200 mt-2 locked-section"><i class="fa-solid fa-brain w-6 text-fert nav-icon hidden"></i><i class="fa-solid fa-lock w-6 text-slate-400"></i> Mnemonic Appendix</button></li>
+                <li><button onclick="showSection('final_quiz_sec')" id="btn-final_quiz_sec" class="nav-btn w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors locked-section"><i class="fa-solid fa-graduation-cap w-6 text-amber-500 nav-icon hidden"></i><i class="fa-solid fa-lock w-6 text-slate-400"></i> Final 50‑Item Exam</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="flex-1 h-full overflow-y-auto bg-slate-100 relative w-full">
+        <div class="fixed top-16 md:top-4 right-4 md:right-8 z-40 flex items-center bg-white/90 backdrop-blur px-4 py-3 rounded-full shadow-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors" onclick="toggleRecallMode()">
+            <span class="mr-3 text-sm font-bold text-slate-700 hidden md:inline"><i class="fa-solid fa-brain text-fert mr-1"></i> Active Recall</span>
+            <span class="mr-3 text-sm font-bold text-slate-700 md:hidden"><i class="fa-solid fa-brain text-fert"></i></span>
+            <button id="recall-toggle" class="w-12 h-6 bg-slate-300 rounded-full relative transition-colors duration-300 focus:outline-none shadow-inner pointer-events-none">
+                <div id="recall-knob" class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform duration-300 shadow"></div>
+            </button>
+        </div>
+
+        <div class="p-4 md:p-8 max-w-6xl mx-auto pb-32">
+
+            <!-- HOME SECTION -->
+            <section id="home" class="content-section flex flex-col items-center justify-center min-h-[80vh] text-center block">
+                <div class="bg-gradient-to-br from-slate-800 to-fert-dark text-white rounded-3xl shadow-2xl p-10 md:p-16 w-full relative overflow-hidden">
+                    <div class="absolute top-0 right-0 -mt-10 -mr-10 text-white opacity-5 pointer-events-none"><i class="fa-solid fa-baby-carriage text-[20rem]"></i></div>
+                    <div class="relative z-10">
+                        <div class="bg-white/10 backdrop-blur-sm inline-block p-4 rounded-full text-fert-light mb-6 shadow-sm border border-white/20">
+                            <i class="fa-solid fa-children text-5xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-300 mb-2 uppercase tracking-widest">Maternal & Child Health Nursing</h3>
+                        <h1 class="text-4xl md:text-6xl font-black text-white mb-6 leading-tight drop-shadow-md">Fertility Assessment<br>(Subfertility & Infertility)</h1>
+                        <div class="bg-white/10 backdrop-blur inline-block px-6 py-3 rounded-full mb-10 border border-white/20">
+                            <p class="text-lg text-white font-medium">"Infertility is a condition of the reproductive system defined by the failure to achieve a clinical pregnancy after 12 months or more of regular unprotected sexual intercourse." – World Health Organization</p>
+                        </div>
+                        <button onclick="unlockFirstSection()" class="bg-slate-600 hover:bg-slate-500 text-white font-black py-4 px-10 rounded-full shadow-xl transition-transform hover:scale-105 text-lg flex items-center mx-auto focus:outline-none">
+                            Begin Lecture <i class="fa-solid fa-arrow-right ml-3"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 1: Definitions & Epidemiology -->
+            <section id="overview" class="content-section hidden">
+                <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                    <h2 class="text-3xl font-black text-slate-800 mb-6 border-b-2 border-fert pb-3"><i class="fa-solid fa-biohazard text-fert mr-4"></i> Definitions & Epidemiology</h2>
+                    <div class="bg-slate-100 border-l-4 border-fert p-4 mb-6 rounded-r shadow-sm">
+                        <p><strong class="text-fert-dark">Infertility</strong> – failure to conceive after 12 months of regular unprotected intercourse (or 6 months if the woman is ≥35 years). Affects approximately 8–12% of couples worldwide.</p>
+                        <p class="text-xs text-slate-500 mt-1">Reference: ASRM 2025 Guidelines, NICE CG156</p>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                            <h3 class="font-bold text-lg mb-3"><i class="fa-solid fa-chart-pie text-fert mr-2"></i> Causes of Subfertility</h3>
+                            <ul class="list-disc pl-5 space-y-2 text-sm">
+                                <li>⚡ Female factors: <span class="reveal-text">~30%</span> (ovulation disorders, tubal disease, uterine anomalies)</li>
+                                <li>🧬 Male factors: <span class="reveal-text">~30%</span> (spermatogenesis failure, ductal obstruction, impaired sperm quality)</li>
+                                <li>🤝 Combined/mixed: <span class="reveal-text">~30%</span></li>
+                                <li>❓ Unexplained: <span class="reveal-text">~10–20%</span> despite standard workup</li>
+                            </ul>
+                            <p class="text-xs text-slate-500 mt-2">Source: Hong Kong FHS 2016; Murtagh 2025</p>
+                        </div>
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                            <h3 class="font-bold text-lg mb-3"><i class="fa-solid fa-chart-line text-fert mr-2"></i> Age & Fertility Decline</h3>
+                            <ul class="list-disc pl-5 space-y-2 text-sm">
+                                <li>After <span class="reveal-text">32 years</span> → female fertility declines by <span class="reveal-text">1.5% per year</span></li>
+                                <li>Pregnancy rate after 12 months: &lt;31y → <span class="reveal-text">74%</span>; 31–35y → <span class="reveal-text">62%</span>; &gt;35y → <span class="reveal-text">54%</span></li>
+                                <li>Male fertility → subtle decline after <span class="reveal-text">~40–45 years</span> (sperm quality, DNA fragmentation)</li>
+                            </ul>
+                            <p class="text-xs text-slate-500 mt-2">Source: ASRM 2025, ObG Project 2025</p>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4 mt-6">
+                        <div class="bg-fert-light p-3 rounded-xl text-center text-fert-dark"><i class="fa-regular fa-calendar-check text-2xl mb-1"></i><p class="font-bold">Referral timeline</p><p class="text-sm">&lt;35 years: 12 months<br>≥35 years: 6 months</p></div>
+                        <div class="bg-fert-light p-3 rounded-xl text-center text-fert-dark"><i class="fa-solid fa-people-arrows"></i><p class="font-bold">Both partners</p><p class="text-sm">Always assess together</p></div>
+                        <div class="bg-fert-light p-3 rounded-xl text-center text-fert-dark"><i class="fa-solid fa-chart-simple"></i><p class="font-bold">Unexplained</p><p class="text-sm">~10–20% of couples</p></div>
+                    </div>
+                    <button onclick="openQuiz('overview')" class="mt-8 w-full bg-slate-800 text-white font-black py-4 rounded-xl shadow-md hover:bg-slate-900 transition-colors flex items-center justify-center text-lg"><i class="fa-solid fa-list-check mr-3 text-2xl text-fert"></i> Take Quiz to Unlock Next Section</button>
+                </div>
+            </section>
+
+            <!-- SECTION 2: Female Factor Assessment -->
+            <section id="female" class="content-section hidden">
+                <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                    <h2 class="text-3xl font-black text-slate-800 mb-6 border-b-2 border-fert pb-3"><i class="fa-solid fa-venus text-fert mr-4"></i> Female Factor Assessment</h2>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-fert-light p-5 rounded-xl text-fert-dark">
+                            <h3 class="font-bold text-lg">In Vitro Fertilization (IVF)</h3>
+                            <ul class="list-disc pl-5 text-sm">
+                                <li>Indications: tubal factor, severe male factor, unexplained after IUI failure, endometriosis</li>
+                                <li>Live birth rate per cycle ~30–40% for women &lt;35y</li>
+                                <li>Preimplantation genetic testing (PGT) available for monogenic/chromosomal disorders</li>
+                            </ul>
+                        </div>
+                        <div class="bg-fert-light p-5 rounded-xl text-fert-dark">
+                            <h3 class="font-bold text-lg">Third‑party reproduction</h3>
+                            <ul class="list-disc pl-5 text-sm">
+                                <li>Donor sperm (intracervical or IUI)</li>
+                                <li>Donor oocytes / embryos</li>
+                                <li>Surrogacy (where legal)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button onclick="openQuiz('treatment')" class="mt-8 w-full bg-slate-800 text-white font-black py-4 rounded-xl shadow-md hover:bg-slate-900 transition-colors flex items-center justify-center text-lg"><i class="fa-solid fa-list-check mr-3 text-2xl text-fert"></i> Take Quiz to Unlock Next Section</button>
+                </div>
+            </section>
+
+            <!-- SECTION 6: PHN Role & Nursing Care -->
+            <section id="nursing" class="content-section hidden">
+                <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                    <h2 class="text-3xl font-black text-slate-800 mb-6 border-b-2 border-fert pb-3"><i class="fa-solid fa-user-nurse text-fert mr-4"></i> PHN Role & Nursing Care</h2>
+                    <ul class="list-disc pl-5 space-y-3 text-slate-700">
+                        <li><strong>Health education & prevention:</strong> Promote optimal weight, smoking cessation, limit alcohol/caffeine, manage chronic conditions (diabetes, thyroid).</li>
+                        <li><strong>Assessment & early referral:</strong> Obtain detailed reproductive history, identify red flags (irregular cycles, endometriosis, prior pelvic infection, varicocele).</li>
+                        <li><strong>Psychological support:</strong> Subfertility causes significant distress – provide empathetic, non‑judgmental counselling, refer to support groups.</li>
+                        <li><strong>Coordination of care:</strong> Navigate diagnostic workup, assist with insurance/treatment coverage, coordinate with REI specialists.</li>
+                        <li><strong>Lifestyle interventions:</strong> Weight loss (5–10% of body weight improves ovulation), moderate exercise, stress reduction techniques.</li>
+                    </ul>
+                    <div class="bg-indigo-50 mt-6 p-4 rounded-xl border border-indigo-200">
+                        <p class="font-bold"><i class="fa-regular fa-hospital"></i> DOH / Public Health implication:</p>
+                        <p>Subfertility prevention is integrated into family planning, STI/HIV prevention, and preconception care programs.</p>
+                    </div>
+                    <button onclick="openQuiz('nursing')" class="mt-8 w-full bg-slate-800 text-white font-black py-4 rounded-xl shadow-md hover:bg-slate-900 transition-colors flex items-center justify-center text-lg"><i class="fa-solid fa-list-check mr-3 text-2xl text-fert"></i> Take Quiz to Unlock Next Section</button>
+                </div>
+            </section>
+
+            <!-- SECTION 7: Mnemonic Appendix -->
+            <section id="mnemonics" class="content-section hidden">
+                <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                    <h2 class="text-3xl font-black text-slate-800 mb-6 border-b-2 border-fert pb-3"><i class="fa-solid fa-brain text-fert mr-4"></i> Mnemonic Appendix</h2>
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                        <table class="w-full text-left text-sm md:text-base">
+                            <thead class="bg-slate-800 text-white"><tr><th class="p-3">Topic</th><th class="p-3">Mnemonic</th><th class="p-3">Meaning</th></tr></thead>
+                            <tbody class="divide-y bg-white">
+                                <tr><td class="p-3 font-semibold">Female infertility workup</td><td class="font-black text-fert">OVARY</td><td class="reveal-text">Ovulation, hystero‑salpingo, Anti‑Müllerian, & Rad‑imaging, Y‑chromosome (exclusion)</td></tr>
+                                <tr class="bg-slate-50"><td class="p-3 font-semibold">Male semen parameters</td><td class="font-black text-fert">VOLUME ≥1.5</td><td class="reveal-text">Volume, pH≥7.2, count≥15M/mL, morphology≥4%</td></tr>
+                                <tr><td class="p-3 font-semibold">Unexplained infertility options</td><td class="font-black text-fert">IUI → IVF</td><td class="reveal-text">Ovulation induction + IUI first, then IVF</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button onclick="openQuiz('final_quiz')" class="mt-8 w-full bg-amber-500 text-slate-900 font-black py-4 rounded-xl shadow-md hover:bg-amber-400 transition-colors text-lg"><i class="fa-solid fa-graduation-cap mr-3"></i> Take Final 50‑Item Exam</button>
+                </div>
+            </section>
+
+            <!-- FINAL QUIZ SECTION -->
+            <section id="final_quiz_sec" class="content-section hidden">
+                <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 text-center min-h-[60vh] flex flex-col justify-center items-center">
+                    <i class="fa-solid fa-graduation-cap text-8xl text-amber-400 mb-6"></i>
+                    <h2 class="text-4xl font-black text-slate-800 mb-4">Final Comprehensive Exam</h2>
+                    <p class="text-lg text-slate-600 mb-8 max-w-2xl">You have completed all modules. Test your mastery of fertility assessment – 50 items, need 75% to pass.</p>
+                    <button onclick="openQuiz('final_quiz')" class="w-full max-w-md bg-slate-800 text-white font-black py-4 rounded-xl shadow-md hover:bg-slate-900 transition-colors text-xl">Start Final Exam</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="quiz-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 md:p-8 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeQuiz()" class="absolute top-4 right-4 text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            <h2 id="quiz-title" class="text-3xl font-black text-slate-800 mb-2"></h2>
+            <p class="text-slate-600 mb-6 font-medium border-b border-slate-200 pb-4">Score at least <span class="font-bold text-fert">75%</span> to unlock next section.</p>
+            <div id="quiz-questions-container" class="space-y-4"></div>
+            <button id="quiz-submit-btn" onclick="submitQuiz()" class="mt-8 w-full bg-fert text-white font-bold py-4 rounded-xl hover:bg-fert-dark transition-colors shadow-lg text-lg">Submit Answers</button>
+            <div id="quiz-result-container" class="hidden mt-6 p-4 rounded-xl bg-slate-100 border border-slate-200"></div>
+        </div>
+    </div>
+
+    <script>
+        // ---------------------- QUIZ CONTENT (10 items each core section, 50 final) ----------------------
+        const quizzes = {
+            overview: { title: 'Definitions & Epidemiology', next: 'female', questions: [
+                { q: "Infertility is defined as failure to conceive after how many months of regular unprotected intercourse?", options: ["6 months", "12 months (or 6 months if woman ≥35 y)", "9 months", "18 months"], ans: 1 },
+                { q: "Approximately what percentage of subfertility cases are attributable solely to female factors?", options: ["10%", "30%", "50%", "70%"], ans: 1 },
+                { q: "Which age threshold prompts expedited fertility evaluation after 6 months of trying?", options: ["≥30 years", "≥35 years", "≥40 years", "≥28 years"], ans: 1 },
+                { q: "The probability of spontaneous pregnancy after 12 months of trying for women younger than 31 years is approximately:", options: ["50%", "62%", "74%", "85%"], ans: 2 },
+                { q: "Subfertility is a common problem affecting approximately what percentage of couples globally?", options: ["1–2%", "8–12%", "20–25%", "30–40%"], ans: 1 },
+                { q: "A couple in which both partners have normal findings on initial workup but still fail to conceive is classified as:", options: ["Combined factor", "Unexplained subfertility", "Idiopathic male factor", "Endometriosis"], ans: 1 },
+                { q: "Male factors account for roughly what proportion of subfertility cases?", options: ["30%", "50%", "70%", "10%"], ans: 0 },
+                { q: "After age 32, female fertility declines by how much per year?", options: ["0.5%", "1.5%", "3%", "5%"], ans: 1 },
+                { q: "Which professional organization defines infertility based on the need for medical intervention?", options: ["WHO", "ASRM", "ACOG", "ICMART"], ans: 1 },
+                { q: "The natural decline in ovarian reserve accelerates markedly around age:", options: ["30", "35", "38", "40"], ans: 1 }
+            ] },
+            female: { title: 'Female Factor Assessment', next: 'male', questions: [
+                { q: "Which test is considered the most direct marker of ovarian reserve?", options: ["Day‑3 FSH", "AMH (Anti‑Müllerian Hormone)", "LH", "Estradiol"], ans: 1 },
+                { q: "Mid‑luteal serum progesterone level helps confirm:", options: ["Tubal patency", "Ovulation", "Endometrial receptivity", "Cervical mucus quality"], ans: 1 },
+                { q: "What does a low AMH level (&lt;1.0 ng/mL) suggest?", options: ["Good ovarian reserve", "Diminished ovarian reserve", "PCOS", "Elevated prolactin"], ans: 1 },
+                { q: "Hysterosalpingography (HSG) is primarily used to evaluate:", options: ["Ovarian reserve", "Uterine cavity and tubal patency", "Sperm morphology", "Hormonal profile"], ans: 1 },
+                { q: "Which day of the cycle is optimal for baseline FSH and estradiol measurement?", options: ["Day 14", "Day 3", "Day 21", "Any day"], ans: 1 },
+                { q: "What condition is the most common cause of ovulatory dysfunction in women?", options: ["Endometriosis", "PCOS (Polycystic Ovarian Syndrome)", "Tubal blockage", "Premature ovarian insufficiency"], ans: 1 },
+                { q: "Elevated prolactin levels may cause infertility by:", options: ["Blocking fallopian tubes", "Suppressing GnRH and causing anovulation", "Increasing FSH", "Thickening cervical mucus"], ans: 1 },
+                { q: "A saline infusion sonogram (SIS) is used to detect:", options: ["Tubal blockage", "Intrauterine polyps/fibroids/adhesions", "Ovarian cysts", "Sperm antibodies"], ans: 1 },
+                { q: "Laparoscopy is the gold standard diagnostic tool for:", options: ["Uterine fibroids", "Endometriosis and peritoneal factors", "Tubal patency", "Ovarian reserve"], ans: 1 },
+                { q: "The antral follicle count (AFC) is obtained through:", options: ["Blood test", "Transvaginal ultrasound", "HSG", "Hysteroscopy"], ans: 1 }
+            ] },
+            male: { title: 'Male Factor Assessment', next: 'diagnostics', questions: [
+                { q: "First‑line investigation for male partner is:", options: ["Testicular ultrasound", "Semen analysis", "Hormonal panel", "Genetic karyotyping"], ans: 1 },
+                { q: "According to WHO 2021, normal sperm concentration is:", options: ["≥10 million/mL", "≥15 million/mL", "≥20 million/mL", "≥5 million/mL"], ans: 1 },
+                { q: "If a first semen analysis is abnormal, confirmatory testing should ideally be repeated after:", options: ["2 weeks", "3 months", "6 months", "1 year"], ans: 1 },
+                { q: "Normal progressive sperm motility (WHO 2021) is defined as:", options: ["≥20%", "≥32%", "≥40%", "≥50%"], ans: 1 },
+                { q: "Which physical finding is a common reversible cause of male subfertility?", options: ["Hydrocele", "Varicocele", "Testicular atrophy", "Cryptorchidism"], ans: 1 },
+                { q: "Normal semen volume according to WHO 2021 is:", options: ["≥0.5 mL", "≥1.5 mL", "≥2.5 mL", "≥4 mL"], ans: 1 },
+                { q: "Elevated FSH in a male with azoospermia suggests:", options: ["Obstructive azoospermia", "Non‑obstructive (testicular failure)", "Normal finding", "Hyperprolactinemia"], ans: 1 },
+                { q: "What is the normal reference value for sperm morphology (strict criteria)?", options: ["≥4%", "≥10%", "≥15%", "≥30%"], ans: 0 },
+                { q: "Klinefelter syndrome (47,XXY) is diagnosed via:", options: ["Semen analysis", "Karyotype", "Testicular biopsy", "Ultrasound"], ans: 1 },
+                { q: "Which of the following is NOT a standard component of basic semen analysis?", options: ["Volume", "Sperm DNA fragmentation", "Concentration", "Motility"], ans: 1 }
+            ] },
+            diagnostics: { title: 'Diagnostic Workup', next: 'treatment', questions: [
+                { q: "Which test provides a functional assessment of fallopian tube patency?", options: ["AMH", "HSG", "Transvaginal ultrasound", "Hysteroscopy"], ans: 1 },
+                { q: "A low AMH level in a 30‑year‑old woman indicates:", options: ["Excellent prognosis", "Reduced oocyte quantity", "High risk of multiple pregnancy", "Endometriosis"], ans: 1 },
+                { q: "Which hormone is measured to rule out hypothyroidism as a cause of infertility?", options: ["TSH", "Prolactin", "LH", "Progesterone"], ans: 0 },
+                { q: "The clomiphene citrate challenge test (CCCT) evaluates:", options: ["Tubal patency", "Ovarian reserve", "Sperm function", "Endometrial receptivity"], ans: 1 },
+                { q: "An abnormal postcoital test is no longer routinely recommended because:", options: ["It is invasive", "It has poor predictive value", "It is expensive", "It requires ovulation induction"], ans: 1 },
+                { q: "What does an elevated Day‑3 FSH level (&gt;10 IU/L) suggest?", options: ["Normal ovarian function", "Diminished ovarian reserve", "PCOS", "Luteal phase defect"], ans: 1 },
+                { q: "A transvaginal ultrasound showing 30 antral follicles is most consistent with:", options: ["PCOS", "Diminished reserve", "Normal finding", "Hydrosalpinx"], ans: 0 },
+                { q: "Which test is used to screen for antisperm antibodies in the female partner?", options: ["Postcoital test", "Immunobead test", "HSG", "AMH"], ans: 1 },
+                { q: "In a woman with suspected Asherman syndrome (intrauterine adhesions), the best diagnostic tool is:", options: ["HSG", "SIS/hysteroscopy", "MRI", "Laparoscopy"], ans: 1 },
+                { q: "What is the preferred test to diagnose hydrosalpinx?", options: ["AMH", "HSG", "Saline sonogram", "Endometrial biopsy"], ans: 1 }
+            ] },
+            treatment: { title: 'Management & ART', next: 'nursing', questions: [
+                { q: "What is the first‑line oral medication for ovulation induction in PCOS?", options: ["Metformin", "Clomiphene citrate", "Letrozole", "Dexamethasone"], ans: 1 },
+                { q: "Intrauterine insemination (IUI) is most beneficial when:", options: ["Severe male factor", "Bilateral tubal blockage", "Unexplained subfertility with patent tubes", "Azoospermia"], ans: 2 },
+                { q: "Which assisted reproductive technology involves fertilization outside the body?", options: ["IUI", "IVF", "GIFT", "Clomiphene alone"], ans: 1 },
+                { q: "The live birth rate per IVF cycle for women under 35 is approximately:", options: ["15%", "30–40%", "50–60%", "70%"], ans: 1 },
+                { q: "Letrozole is favored over clomiphene in PCOS because it:", options: ["Causes higher multiple pregnancy", "Has longer half‑life", "May result in higher live birth rate", "Requires daily monitoring"], ans: 2 },
+                { q: "What is the purpose of GnRH antagonist in an IVF cycle?", options: ["Ovarian stimulation", "Preventing premature LH surge", "Luteal support", "Triggering ovulation"], ans: 1 },
+                { q: "Which condition is an absolute contraindication to IUI?", options: ["Unexplained infertility", "Bilateral tubal occlusion", "Mild oligospermia", "Mild endometriosis"], ans: 1 },
+                { q: "Preimplantation genetic testing (PGT) is performed on:", options: ["Oocytes", "Embryos prior to transfer", "Sperm cells", "Maternal blood"], ans: 1 },
+                { q: "Azoospermia with normal FSH, normal testicular size suggests:", options: ["Testicular failure", "Obstructive azoospermia", "Sertoli‑cell‑only syndrome", "Kallmann syndrome"], ans: 1 },
+                { q: "Which medication is used as a dopamine agonist to lower prolactin?", options: ["Clomiphene", "Bromocriptine", "Metformin", "Letrozole"], ans: 1 }
+            ] },
+            nursing: { title: 'PHN Role & Nursing Care', next: 'mnemonics', questions: [
+                { q: "A primary role of the public health nurse in fertility assessment is:", options: ["Performing IVF", "Health education and early referral", "Prescribing clomiphene", "Interpreting karyotypes"], ans: 1 },
+                { q: "Which lifestyle modification has the strongest evidence to improve ovulatory function?", options: ["Low‑carbohydrate diet", "Weight loss of 5–10%", "Vitamin D supplementation", "High‑intensity interval training"], ans: 1 },
+                { q: "The PHN should initiate fertility referral for a 34‑year‑old woman after how many months of unprotected intercourse?", options: ["6 months", "12 months", "3 months", "18 months"], ans: 0 },
+                { q: "What is an essential component of nursing care for a couple undergoing IVF?", options: ["Genetic testing interpretation", "Emotional support and counselling", "Sonography", "Embryo transfer"], ans: 1 },
+                { q: "Which of the following is a modifiable risk factor for infertility?", options: ["Maternal age", "Smoking", "Klinefelter syndrome", "Turner syndrome"], ans: 1 },
+                { q: "The PHN should advise a couple with unexplained subfertility to:", options: ["Continue expectant management only", "Consider IUI followed by IVF if needed", "Proceed directly to donor oocyte", "Avoid all treatments"], ans: 1 },
+                { q: "Which vaccine status should be verified before pregnancy?", options: ["HPV", "Rubella", "Hepatitis B", "Pneumococcal"], ans: 1 },
+                { q: "A common psychological consequence of subfertility that nurses should assess for is:", options: ["Euphoria", "Social isolation and anxiety", "Increased libido", "Weight loss"], ans: 1 },
+                { q: "The PHN’s role in secondary infertility prevention includes:", options: ["Treating tubal blockage directly", "Identifying red flags (irregular cycles, pelvic infection history)", "Performing HSG", "Prescribing letrozole"], ans: 1 },
+                { q: "What is the most appropriate action when a patient reports financial barrier to IVF?", options: ["Advise to stop treatment", "Explore low‑cost options, insurance coverage, or clinic payment plans", "Refer for adoption immediately", "Discontinue nursing support"], ans: 1 }
+            ] }
+        };
+
+        // Build final 50-item exam (10 from each of the 5 core sections)
+        let finalQ = [];
+        for (let sec of ['overview','female','male','diagnostics','treatment']) {
+            finalQ = finalQ.concat(quizzes[sec].questions.slice(0,10));
+        }
+        while(finalQ.length < 50) finalQ.push({ q: "What is the drug of choice for ovulation induction in WHO type II anovulation?", options: ["Metformin", "Clomiphene citrate", "Letrozole", "Dexamethasone"], ans: 1 });
+        quizzes['final_quiz'] = { title: 'Final 50‑Item Exam', next: null, questions: finalQ };
+
+        let unlockedSections = ['home'];
+        function unlockFirstSection() { if(!unlockedSections.includes('overview')) { unlockedSections.push('overview'); updateSidebarUI(); } showSection('overview'); }
+        function showSection(sectionId) {
+            if (!unlockedSections.includes(sectionId) && sectionId !== 'home') { alert("Please complete the Active Recall Quiz at the bottom of the previous section to unlock this content."); return; }
+            document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(sectionId)?.classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(btn => { btn.classList.remove('bg-fert-light','text-fert-dark','border-r-4','border-fert-dark'); btn.classList.add('text-slate-600'); });
+            const activeBtn = document.getElementById('btn-'+sectionId);
+            if(activeBtn) { activeBtn.classList.remove('text-slate-600'); activeBtn.classList.add('bg-fert-light','text-fert-dark','border-r-4','border-fert-dark'); }
+            if(window.innerWidth < 768) document.getElementById('sidebar').classList.add('hidden');
+            document.querySelector('main').scrollTop = 0;
+        }
+        function updateSidebarUI() {
+            const sections = ['home','overview','female','male','diagnostics','treatment','nursing','mnemonics','final_quiz_sec'];
+            sections.forEach(sec => {
+                const btn = document.getElementById('btn-'+sec);
+                if(!btn) return;
+                const lockIcon = btn.querySelector('.fa-lock'), mainIcon = btn.querySelector('.nav-icon');
+                if(unlockedSections.includes(sec) || sec==='home') { btn.classList.remove('locked-section'); if(lockIcon) lockIcon.classList.add('hidden'); if(mainIcon) mainIcon.classList.remove('hidden'); }
+                else { btn.classList.add('locked-section'); if(lockIcon) lockIcon.classList.remove('hidden'); if(mainIcon) mainIcon.classList.add('hidden'); }
+            });
+        }
+
+        let currentQuiz = null;
+        function openQuiz(sectionId) {
+            currentQuiz = sectionId;
+            const qd = quizzes[sectionId];
+            if(!qd) { console.error("Quiz not found:", sectionId); return; }
+            document.getElementById('quiz-title').innerText = qd.title;
+            const container = document.getElementById('quiz-questions-container');
+            container.innerHTML = '';
+            qd.questions.forEach((q, idx) => {
+                let html = `<div class="bg-slate-50 p-4 rounded-xl border mb-4" id="quiz-q-${idx}">
+                    <p class="font-bold mb-3">${idx+1}. ${q.q}</p>
+                    <div class="space-y-2" data-qidx="${idx}">`;
+                q.options.forEach((opt, oi) => {
+                    html += `<label class="flex items-center space-x-3 p-2 rounded-lg hover:bg-white cursor-pointer">
+                        <input type="radio" name="q${idx}" value="${oi}" class="form-radio text-fert">
+                        <span>${opt}</span>
+                    </label>`;
+                });
+                html += `</div><div class="feedback-${idx} text-sm mt-2 hidden"></div></div>`;
+                container.innerHTML += html;
+            });
+            document.getElementById('quiz-submit-btn').classList.remove('hidden');
+            document.getElementById('quiz-result-container').classList.add('hidden');
+            document.getElementById('quiz-modal').classList.remove('hidden');
+        }
+        function closeQuiz() { document.getElementById('quiz-modal').classList.add('hidden'); }
+        function submitQuiz() {
+            const qd = quizzes[currentQuiz];
+            if(!qd) return;
+            let score = 0;
+            for(let i=0; i<qd.questions.length; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                const isCorrect = (selected && parseInt(selected.value) === qd.questions[i].ans);
+                if(isCorrect) score++;
+                const feedbackDiv = document.querySelector(`.feedback-${i}`);
+                if(feedbackDiv) {
+                    feedbackDiv.classList.remove('hidden');
+                    const correctAnswerText = qd.questions[i].options[qd.questions[i].ans];
+                    if(isCorrect) {
+                        feedbackDiv.innerHTML = `<span class="text-green-700"><i class="fa-solid fa-check-circle mr-1"></i> Correct!</span>`;
+                        feedbackDiv.parentElement?.classList.add('quiz-feedback-correct');
+                        feedbackDiv.parentElement?.classList.remove('quiz-feedback-wrong');
+                    } else {
+                        const selectedText = selected ? qd.questions[i].options[parseInt(selected.value)] : "No answer";
+                        feedbackDiv.innerHTML = `<span class="text-red-700"><i class="fa-solid fa-times-circle mr-1"></i> Incorrect. Correct answer: <strong>${correctAnswerText}</strong>. Your answer: ${selectedText}.</span>`;
+                        feedbackDiv.parentElement?.classList.add('quiz-feedback-wrong');
+                        feedbackDiv.parentElement?.classList.remove('quiz-feedback-correct');
+                    }
+                }
+            }
+            const percent = (score/qd.questions.length)*100;
+            const resultDiv = document.getElementById('quiz-result-container');
+            const btn = document.getElementById('quiz-submit-btn');
+            btn.classList.add('hidden');
+            resultDiv.classList.remove('hidden');
+            if(percent >= 75) {
+                if(currentQuiz === 'final_quiz') {
+                    resultDiv.innerHTML = `<div class="text-amber-500 text-6xl mb-4 text-center">🏆</div><h3 class="text-2xl font-black text-center">Excellent!</h3><p class="text-center">Score ${score}/${qd.questions.length} (${percent}%)</p><p class="mt-2 text-center text-green-700">You mastered fertility assessment!</p><button onclick="closeQuiz()" class="mt-4 w-full bg-slate-800 text-white py-2 rounded-lg">Close</button>`;
+                    return;
+                }
+                if(qd.next && !unlockedSections.includes(qd.next)) { unlockedSections.push(qd.next); if(qd.next === 'mnemonics') unlockedSections.push('final_quiz_sec'); updateSidebarUI(); }
+                resultDiv.innerHTML = `<div class="text-green-600 text-5xl mb-4 text-center">✓</div><h3 class="text-2xl font-black text-center">Passed!</h3><p class="text-center">Score ${score}/${qd.questions.length} (${percent}%)</p><button onclick="closeQuiz(); showSection('${qd.next}')" class="mt-4 w-full bg-green-600 text-white py-2 rounded-lg">Unlock Next Section</button>`;
+            } else {
+                resultDiv.innerHTML = `<div class="text-red-500 text-5xl mb-4 text-center">✗</div><h3 class="text-2xl font-black text-center">Failed</h3><p class="text-center">Score ${score}/${qd.questions.length} (${percent}%) – need 75%.</p><button onclick="openQuiz('${currentQuiz}')" class="mt-4 w-full bg-slate-600 text-white py-2 rounded-lg">Try Again</button>`;
+            }
+        }
+        function toggleRecallMode() {
+            const active = !document.body.classList.contains('recall-mode');
+            const toggle = document.getElementById('recall-toggle'), knob = document.getElementById('recall-knob');
+            if(active) { document.body.classList.add('recall-mode'); toggle.classList.add('bg-fert-dark'); knob.classList.add('translate-x-6'); }
+            else { document.body.classList.remove('recall-mode'); toggle.classList.remove('bg-fert-dark'); knob.classList.remove('translate-x-6'); }
+        }
+        function toggleMobileMenu() { const s=document.getElementById('sidebar'); if(s.classList.contains('hidden')) s.classList.remove('hidden','flex','absolute','h-full','z-50'); else s.classList.add('hidden'); }
+        document.addEventListener('DOMContentLoaded', () => { updateSidebarUI(); document.querySelectorAll('.reveal-text').forEach(el => el.addEventListener('click', function(){ if(document.body.classList.contains('recall-mode')) this.classList.toggle('revealed'); })); });
+    </script>
+</body>
+</html>
